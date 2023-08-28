@@ -1,7 +1,25 @@
 import jwt from "jsonwebtoken";
 import { User } from "../Schema/user.js";
 import bcrypt from "bcrypt";
+import mongoose from "mongoose"
 
+function createcookies(res,token) {
+    res
+        .cookie("Token", token, {
+            httpOnly: true,
+            maxAge: 1000 * 60 * 15,
+            sameSite: process.env.NODE_ENV === "Develpoment" ? "lax" : "none",
+            secure: process.env.NODE_ENV === "Develpoment" ? false : true,
+        })
+        .status(201)
+        .json({
+            success: true,
+            message: "Registered successfully.",
+        });
+}
+
+
+//login
 export const login = async (req, res, next) => {
     try {
         const { username, password } = req.body;
@@ -24,17 +42,8 @@ export const login = async (req, res, next) => {
 
         const token = jwt.sign({ _id: user._id }, process.env.SECRET_CODE);
 
-        res
-            .cookie("Token", token, {
-                httpOnly: true,
-                maxAge: 1000 * 60 * 15,
-                sameSite: process.env.NODE_ENV === "Develpoment" ? "lax" : "none",
-                secure: process.env.NODE_ENV === "Develpoment" ? false : true,
-            })
-            .json({
-                success: true,
-                message: "Logged in successfully",
-            });
+        createcookies(res,token);
+
     } catch (error) {
         next(error);
     }
@@ -63,18 +72,8 @@ export const register = async (req, res, next) => {
 
         const token = jwt.sign({ _id: newUser._id }, process.env.SECRET_CODE);
 
-        res
-            .cookie("Token", token, {
-                httpOnly: true,
-                maxAge: 1000 * 60 * 15,
-                sameSite: process.env.NODE_ENV === "Develpoment" ? "lax" : "none",
-                secure: process.env.NODE_ENV === "Develpoment" ? false : true,
-            })
-            .status(201)
-            .json({
-                success: true,
-                message: "Registered successfully.",
-            });
+        createcookies(res,token);
+
     } catch (error) {
         next(error);
     }
@@ -83,7 +82,6 @@ export const register = async (req, res, next) => {
 export const logout = async (req, res, next) => {
     try {
         const { Token } = req.cookies;
-        console.log(Token);
         res
             .status(200)
             .cookie("Token", "", {
@@ -111,6 +109,6 @@ export const home = async (req, res, next) => {
         });
     }
 
-    res.status(302).redirect("/login"); // Use status code 302 for redirect
+    res.status(302).redirect("/login");
 };
 
